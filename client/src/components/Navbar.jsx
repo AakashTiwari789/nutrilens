@@ -1,6 +1,7 @@
+"use client";
 import React, { useState } from "react";
 import { FaBars, FaTimes, FaUser } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -37,17 +38,17 @@ const Navbar = () => {
         {/* Menu Items */}
         <ul className="flex flex-col mt-4">
           {menuItems.map((item) => (
-            <li key={item.name} className="px-6 py-3 hover:bg-gray-100">
-              <Link to={item.path} onClick={() => setIsOpen(false)}>
-                {item.name}
-              </Link>
+              <li key={item.name} className="px-6 py-3 hover:bg-gray-100">
+                <Link href={item.path} onClick={() => setIsOpen(false)}>
+                  {item.name}
+                </Link>
             </li>
           ))}
         </ul>
 
         {/* Login Icon at bottom */}
         <div className="absolute bottom-6 w-full flex justify-center">
-          <Link to="/login">
+          <Link href="/login">
             <FaUser className="text-2xl text-gray-800" />
           </Link>
         </div>
