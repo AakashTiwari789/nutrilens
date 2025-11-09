@@ -1,22 +1,20 @@
-import Navbar from "@/components/Sidebar";
+
 import "./globals.css";
-import Footer from "@/components/Footer";
+import { ThemeProvider } from "@/context/ThemeContext";
+import ThemedBody from "@/components/ThemedBody";
 
 export const metadata = {
   title: "Nutrilens",
   description: "An App to Analyze Nutritional Value of Food",
 };
 
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={``}
-      >
-        <Navbar />
-        {children}
-        <Footer />
-      </body>
+      <ThemeProvider>
+        <ThemedBody>{children}</ThemedBody>
+      </ThemeProvider>
     </html>
   );
 }
