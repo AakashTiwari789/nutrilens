@@ -13,7 +13,7 @@ export default function ThemedBody({ children }) {
     <body className={bodyBg + " min-h-screen transition-colors duration-300"}>
       <Navbar />
       {children}
-      <Footer />
+      {/* <Footer /> */}
     </body>
   );
 }
