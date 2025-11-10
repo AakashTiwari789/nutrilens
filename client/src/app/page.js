@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 
 export default function HomePage() {
@@ -13,18 +14,18 @@ export default function HomePage() {
 
   const categories = [
     { name: "Biscuits", value: "biscuits", img: "/images/biscuit.jpg" },
-    { name: "Breakfast & Spreads", value: "breakfast and spreads", img: "/images/bread.jpg" },
-    { name: "Chocolates & Desserts", value: "chocolates and desserts", img: "/images/chocolate.jpg" },
-    { name: "Cold Drinks & Juices", value: "cold drinks and juices", img: "/images/colddrinks.jpg" },
-    { name: "Dairy, Bread & Eggs", value: "dairy, bread and eggs", img: "/images/dairy.jpg" },
-    { name: "Instant Foods", value: "instant foods", img: "/images/instant.jpg" },
+    { name: "Breakfast & Spreads", value: "breakfast-and-spreads", img: "/images/bread.jpg" },
+    { name: "Chocolates & Desserts", value: "chocolates-and-desserts", img: "/images/chocolate.jpg" },
+    { name: "Cold Drinks & Juices", value: "cold-drinks-and-juices", img: "/images/colddrinks.jpg" },
+    { name: "Dairy, Bread & Eggs", value: "dairy-bread-and-eggs", img: "/images/dairy.jpg" },
+    { name: "Instant Foods", value: "instant-foods", img: "/images/instant.jpg" },
     { name: "Snacks", value: "snacks", img: "/images/snacks.jpg" },
-    { name: "Cakes & Bakes", value: "cakes and bakes", img: "/images/bread.jpg" },
-    { name: "Dry Fruits, Oil & Masalas", value: "dry fruits, oil and masalas", img: "/images/dryfruits.jpg" },
+    { name: "Cakes & Bakes", value: "cakes-and-bakes", img: "/images/bread.jpg" },
+    { name: "Dry Fruits, Oil & Masalas", value: "dry-fruits-oil-and-masalas", img: "/images/dryfruits.jpg" },
     { name: "Meat", value: "meat", img: "/images/meat.jpg" },
-    { name: "Rice, Atta & Dals", value: "rice, atta and dals", img: "/images/rice.jpg" },
-    { name: "Tea, Coffee & More", value: "tea, coffee and more", img: "/images/coffee.jpg" },
-    { name: "Supplements & Mores", value: "supplements and mores", img: "/images/protein.jpg" },
+    { name: "Rice, Atta & Dals", value: "rice-atta-and-dals", img: "/images/rice.jpg" },
+    { name: "Tea, Coffee & More", value: "tea-coffee-and-more", img: "/images/coffee.jpg" },
+    { name: "Supplements & Mores", value: "supplements-and-mores", img: "/images/protein.jpg" },
   ];
 
   const [current, setCurrent] = useState(0);
@@ -66,8 +67,10 @@ export default function HomePage() {
 
   const displayedCategories = showAll ? categories : categories.slice(0, 4);
 
+  const router = useRouter();
+  
   const handleCategoryClick = (value) => {
-    console.log("Selected category value:", value);
+    router.push(`/category/${value}`);
   };
 
   return (
