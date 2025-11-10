@@ -73,7 +73,11 @@ export default function HomePage() {
 
   const [current, setCurrent] = useState(0);
   const [showAll, setShowAll] = useState(false);
-  const [news, setNews] = useState(null);
+  // news list, selected news for modal, loading/error states
+  const [newsList, setNewsList] = useState([]);
+  const [selectedNews, setSelectedNews] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
   // --- Image slider ---
@@ -84,28 +88,32 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [images.length]);
 
-  // --- Demo News ---
+  // --- Fetch latest news from API ---
   useEffect(() => {
-    const demoNews = {
-      title: "Experts Warn Against Excessive Salt in Packaged Foods",
-      description:
-        "A new health report suggests that high sodium levels in instant noodles, chips, and other packaged foods can increase the risk of hypertension. Health authorities recommend reading nutrition labels carefully.",
-      content: `
-        Processed and packaged food items often contain hidden sodium, 
-        even in products that don't taste particularly salty. Excessive sodium 
-        intake can contribute to high blood pressure, stroke, and heart disease. 
-        Experts recommend limiting packaged foods and opting for fresh alternatives 
-        whenever possible.
-
-        “The real issue,” says Dr. Anita Rao, “is that people are unaware of how 
-        much salt is actually present in the food they consume daily.”
-
-        The report calls for stricter labeling laws and encourages consumers to 
-        check nutrition facts before purchase.
-      `,
-      image: "/images/news-demo.jpg",
+    const fetchNews = async () => {
+      try {
+        setNewsLoading(true);
+        setNewsError(null);
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "localhost:5000/api/v1/news/get-news";
+        const res = await fetch(`${baseUrl}/news/get-news`);
+        const data = await res.json();  
+        if (data.success && Array.isArray(data.data?.news)) {
+          setNewsList(data.data.news);
+          // set first as selected by default (optional)
+          setSelectedNews(data.data.news[0] || null);
+        } else {
+          setNewsList([]);
+          setNewsError(data.message || "No news available");
+        }
+      } catch (err) {
+        console.error("Error fetching news:", err);
+        setNewsError("Failed to fetch latest news. Please try again later.");
+      } finally {
+        setNewsLoading(false);
+      }
     };
-    setNews(demoNews);
+
+    fetchNews();
   }, []);
 
   const displayedCategories = showAll ? categories : categories.slice(0, 4);
@@ -206,66 +214,49 @@ export default function HomePage() {
           </button>
         </div>
 
-        {/* Categories Grid - Updated Layout */}
-        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100">
-          Browse Categories
-        </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {categories.map((cat, index) => (
-            <div
-              key={index}
-              onClick={() => handleCategoryClick(cat.value)}
-              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-transform duration-300 cursor-pointer"
-            >
-              <div className="relative w-full h-48">
-                <Image
-                  src={cat.img}
-                  alt={cat.name}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <h2 className="absolute bottom-4 left-4 text-xl font-semibold text-white">
-                  {cat.name}
-                </h2>
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* 📰 Latest News Section */}
         <section className={`${cardBg} rounded-xl shadow-md p-6 mb-12`}>
           <h2 className={`text-2xl font-bold mb-4 ${cardText}`}>Latest News</h2>
 
-          {!news ? (
-            <p className={`${subText} italic`}>
-              Fetching latest health news...
-            </p>
+          {newsLoading ? (
+            <p className={`${subText} italic`}>Fetching latest health news...</p>
+          ) : newsError ? (
+            <p className="text-red-600">{newsError}</p>
+          ) : newsList.length === 0 ? (
+            <p className={`${subText} italic`}>No news available.</p>
           ) : (
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              {news.image && (
-                <div className="relative w-full sm:w-1/3 h-48 rounded-xl overflow-hidden">
-                  <Image
-                    src={news.image}
-                    alt={news.title}
-                    fill
-                    className="object-cover"
-                  />
+            <>
+              {/* Featured news (first item) */}
+              {newsList[0] && (
+                <div className="flex flex-col sm:flex-row items-center gap-6 mb-4">
+                  {newsList[0].newsImage && (
+                    <div className="relative w-full sm:w-1/3 h-48 rounded-xl overflow-hidden">
+                      <Image
+                        src={newsList[0].newsImage}
+                        alt={newsList[0].title}
+                        fill
+                        className="object-fill"
+                      />
+                    </div>
+                  )}
+                  <div className="sm:w-2/3">
+                    <h3 className={`text-xl font-semibold mb-2 ${cardText}`}>
+                      {newsList[0].title}
+                    </h3>
+                    <p className={`${subText} mb-3`}>{newsList[0].shortDescription}</p>
+                    <button
+                      onClick={() => {
+                        setSelectedNews(newsList[0]);
+                        setShowModal(true);
+                      }}
+                      className={`font-medium cursor-pointer ${buttonText}`}
+                    >
+                      Read Full Article →
+                    </button>
+                  </div>
                 </div>
               )}
-              <div className="sm:w-2/3">
-                <h3 className={`text-xl font-semibold mb-2 ${cardText}`}>
-                  {news.title}
-                </h3>
-                <p className={`${subText} mb-3`}>{news.description}</p>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className={`font-medium cursor-pointer ${buttonText}`}
-                >
-                  Read Full Article →
-                </button>
-              </div>
-            </div>
+            </>
           )}
         </section>
 
@@ -280,42 +271,50 @@ export default function HomePage() {
         </section>
 
         {/* 🪟 Popup Modal */}
-        {showModal && (
+        {showModal && selectedNews && (
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 overflow-y-auto p-4"
             onClick={() => setShowModal(false)}
           >
             <div
-              className={`${cardBg} rounded-xl shadow-xl w-11/12 md:w-2/3 lg:w-1/2 p-6 relative animate-fadeIn`}
+              className={`${cardBg} shadow-xl max-w-3xl md:max-w-2xl lg:max-w-xl relative animate-fadeIn`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={() => setShowModal(false)}
-                className="absolute top-3 right-3 text-gray-600 hover:text-gray-900 cursor-pointer"
+                className="absolute top-4 right-4 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white z-10"
+                aria-label="Close article modal"
               >
-                <X size={24} />
+                <X size={22} />
               </button>
 
-              {/* Article content */}
-              <h2 className={`text-2xl font-bold mb-4 ${cardText}`}>
-                {news.title}
-              </h2>
+              {/* Modal content wrapper with padding and max-height for scrolling */}
+              <div className="px-6 py-6 sm:px-8 sm:py-8 md:px-10 md:py-10 max-h-[95vh] overflow-y-auto">
+                <h2 className={`text-2xl sm:text-3xl font-bold mb-4 ${cardText}`}>
+                  {selectedNews.title}
+                </h2>
 
-              {news.image && (
-                <div className="relative w-full h-52 mb-4 rounded-xl overflow-hidden">
-                  <Image
-                    src={news.image}
-                    alt={news.title}
-                    fill
-                    className="object-cover"
-                  />
+                {selectedNews.newsImage && (
+                  <div className="relative w-full h-56 sm:h-64 mb-6 rounded-lg overflow-hidden">
+                    <Image
+                      src={selectedNews.newsImage}
+                      alt={selectedNews.title}
+                      fill
+                      className="object-fill"
+                    />
+                  </div>
+                )}
+
+                <div className={`${subText} whitespace-pre-line leading-relaxed text-base sm:text-lg`}>
+                  {selectedNews.content}
                 </div>
-              )}
 
-              <p className={`${subText} whitespace-pre-line leading-relaxed`}>
-                {news.content}
-              </p>
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                  <div className="mb-1">Author: {selectedNews.author?.fullName || selectedNews.author?.username}</div>
+                  <div>Published: {new Date(selectedNews.createdAt).toLocaleString()}</div>
+                </div>
+              </div>
             </div>
           </div>
         )}
