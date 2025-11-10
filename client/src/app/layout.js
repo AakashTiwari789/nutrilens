@@ -1,6 +1,5 @@
 import Navbar from "@/components/Sidebar";
 import "./globals.css";
-import Footer from "@/components/Footer";
 
 export const metadata = {
   title: "Nutrilens",
@@ -15,7 +14,6 @@ export default function RootLayout({ children }) {
       >
         <Navbar />
         {children}
-        <Footer />
       </body>
     </html>
   );
