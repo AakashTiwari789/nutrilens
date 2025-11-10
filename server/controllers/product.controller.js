@@ -3,7 +3,7 @@ import ApiError from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import { Product } from "../models/product.model.js";
 import { User } from "../models/user.model.js";
-import { uploadProductOnImageKit } from "../utils/ImageKit.js";
+import { deleteFromImageKit, getFileIdFromUrl, uploadProductOnImageKit } from "../utils/ImageKit.js";
 import { getUserDetailsById } from "./user.controller.js";
 
 export const getProductById = asyncHandler(async (req, res, next) => {
@@ -16,6 +16,16 @@ export const getProductById = asyncHandler(async (req, res, next) => {
 
 export const getProductDetailsById = async (productId) => {
     const product = await Product.findById(productId);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    return product;
+};
+
+export const getProductDetailsByProductId = async (productId) => {
+    const product = await Product.findOne({ productId: productId });
 
     if (!product) {
         throw new ApiError(404, "Product not found");
@@ -103,6 +113,57 @@ export const getAllProducts = asyncHandler(async (req, res, next) => {
                 products,
             },
             "Products fetched successfully"
+        )
+    );
+});
+
+export const updateProductImage = asyncHandler(async (req, res, next) => {
+    const { productId } = req.params;
+
+    const user = req.user;
+
+    if (user.role !== 'company' || user.accountStatus !== 'approved') {
+        throw new ApiError(403, "Only approved companies can update product images");
+    }
+
+    const product = await getProductDetailsByProductId(productId);
+
+    if (product.companyId.toString() !== user._id.toString()) {
+        throw new ApiError(403, "You are not authorized to update this product image");
+    }
+
+    const productImageLocalPath = req.file?.path;
+    if (!productImageLocalPath) {
+        throw new ApiError(400, "Product image is required");
+    }
+
+    const oldImageUrl = product.productImage;
+
+    const oldImageFileId = await getFileIdFromUrl(oldImageUrl);
+
+    const productImage = await uploadProductOnImageKit(productImageLocalPath, productId);
+
+    if (!productImage || productImage.error) {
+        throw new ApiError(500, "Failed to upload product image");
+    }
+
+    // console.log(productImage);
+    product.productImage = productImage.url;
+    await product.save();
+
+    // Optionally, you can implement deletion of the old image from ImageKit here using oldImageUrl
+    if (oldImageUrl) {
+        await deleteFromImageKit(oldImageFileId);
+    }
+
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                product,
+            },
+            "Product image updated successfully"
         )
     );
 });

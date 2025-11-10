@@ -9,12 +9,46 @@ const imagekit = new ImageKit({
     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
 });
 
-const getFileIdFromUrl = (url) => {
-    if (!url) return null;
-    // Extract fileId from URL: https://ik.imagekit.io/your_id/path/fileId_timestamp.ext
-    const matches = url.match(/\/([^\/]+)_\d+\.\w+$/);
-    return matches ? matches[1] : null;
-};
+const getFileIdFromUrl = async (url) => {
+    try {
+        if (!url) return null;
+
+        // Extract the file path from the full URL
+        const base = process.env.IMAGEKIT_URL_ENDPOINT;
+        
+        // Remove the base URL to get just the file path
+        const filePath = url.replace(base, '');
+        
+        // console.log("Original URL:", url);
+        // console.log("File Path:", filePath);
+
+        // getFileDetails expects fileId, not URL
+        // Use listFiles to search by name instead
+        const urlParts = url.split('/');
+        const filename = urlParts[urlParts.length - 1];
+
+        // console.log("Searching for filename:", filename);
+
+        const files = await imagekit.listFiles({
+            searchQuery: `name="${filename}"`
+        });
+
+        if (files && files.length > 0) {
+            // console.log("✅ File found:");
+            // console.log(files[0]);
+            // console.log(`\n🆔 File ID: ${files[0].fileId}`);
+            return files[0].fileId;
+        }
+
+        console.log("❌ File not found");
+        return null;
+
+    } catch (error) {
+        console.error("❌ Error fetching file details:", error.message);
+        return null;
+    }
+}
+
 
 // Delete file from ImageKit
 const deleteFromImageKit = async (fileId) => {
@@ -22,7 +56,7 @@ const deleteFromImageKit = async (fileId) => {
         if (!fileId) return { error: true, message: "No fileId provided" };
 
         await imagekit.deleteFile(fileId);
-        
+
         return {
             error: false,
             message: "File deleted successfully"
@@ -82,15 +116,6 @@ const uploadProductOnImageKit = async (localFilePath, productId) => {
             file: base64File,
             fileName: `${productId}_${Date.now()}`,
             folder: '/proucts',
-            extensions: [
-                {
-                    name: "remove-bg",
-                    options: {
-                        add_shadow: true,
-                        bg_color: "FFFFFF", 
-                    }
-                }
-            ]
         });
 
         // Delete local file after successful upload

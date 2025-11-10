@@ -233,6 +233,8 @@ export const updateUserAvatar = asyncHandler(async (req, res, next) => {
 
     const oldAvatarUrl = user.avatar || "";
 
+    const oldImageFileId = await getFileIdFromUrl(oldAvatarUrl);
+
     const avatarLocalPath = req.file?.path;
 
     if (!avatarLocalPath) {
@@ -255,8 +257,7 @@ export const updateUserAvatar = asyncHandler(async (req, res, next) => {
 
     // Delete old avatar if exists (pass fileId from the response)
     if (updatedUser && oldAvatarUrl) {
-        const oldAvatarFileId = await getFileIdFromUrl(oldAvatarUrl);
-        await deleteFromImageKit(oldAvatarFileId);
+        await deleteFromImageKit(oldImageFileId);
     }
 
     return res.status(200).json(
