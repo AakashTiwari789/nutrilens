@@ -29,6 +29,6 @@ router.route("/change-password").post(authenticateUser, changePassword);
 
 router.route("/get-all-products").get(authenticateUser, getAllProductsOfTheCompany);
 
-router.route("/:id").get(getUserById);
+router.route("/profile").get(authenticateUser, getUserById);
 
 export default router;

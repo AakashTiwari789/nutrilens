@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 import { ThemeContext } from "../context/ThemeContext";
-import { FaBars, FaTimes, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
+import { FaBars, FaTimes, FaChevronDown, FaChevronUp, FaUser, FaSignOutAlt } from "react-icons/fa";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [catsOpen, setCatsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
   const { theme } = useContext(ThemeContext);
+  const { user, isAuthenticated, logout, loading } = useContext(AuthContext);
 
   const menuItems = [
     { name: "Home", path: "/" },
@@ -46,6 +49,12 @@ const Sidebar = () => {
     return pathname.startsWith(`/category/${value}`);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    setIsOpen(false);
+    setUserMenuOpen(false);
+  };
+
   return (
     <>
       {/* Mobile hamburger icon */}
@@ -63,13 +72,13 @@ const Sidebar = () => {
       >
         <div className="flex flex-col h-full">
           <Image
-        src="/images/nutrilens_logo.png"
-        alt="NutriLens Logo"
-        width={60}        // 96px
-        height={60}       // 96px
-        className="rounded-full object-cover ml-6 mt-8"
-        priority          // loads faster
-      />
+            src="/images/nutrilens_logo.png"
+            alt="NutriLens Logo"
+            width={60}
+            height={60}
+            className="rounded-full object-cover ml-6 mt-8"
+            priority
+          />
 
           {/* Menu */}
           <nav className="mt-4 px-4">
@@ -125,39 +134,92 @@ const Sidebar = () => {
           {/* Spacer pushes remaining items to bottom */}
           <div className="grow" />
 
-         {/* Login/Register */}
-<div className="px-4 mb-4 mx-auto">
-  <Link
-    href="/auth/signup"
-    onClick={() => setIsOpen(false)}
-    className={`
-      w-full py-3 px-5 text-center font-semibold text-sm 
-      rounded-full transition-all duration-300 relative overflow-hidden
-      flex items-center justify-center
-      ${
-        theme === "dark"
-          ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
-          : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
-      }
-      hover:scale-[1.03]
-    `}
-  >
-    {/* Inner sheen effect */}
-    <span
-      className={`
-        absolute inset-0 rounded-full pointer-events-none
-        ${
-          theme === "dark"
-            ? "bg-linear-to-r from-transparent via-white/20 to-transparent opacity-40"
-            : "bg-linear-to-r from-transparent via-gray-300/20 to-transparent opacity-40"
-        }
-      `}
-    ></span>
+          {/* Login/Register or User Menu */}
+          <div className="px-4 mb-4 mx-auto">
+            {!loading && (isAuthenticated && user) ? (
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className={`
+                    w-full py-3 px-5 text-center font-semibold text-sm 
+                    rounded-full transition-all duration-300 relative overflow-hidden
+                    flex items-center justify-center gap-2
+                    ${
+                      theme === "dark"
+                        ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
+                        : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
+                    }
+                    hover:scale-[1.03]
+                  `}
+                >
+                  <FaUser size={16} />
+                  <span className="truncate">{user.username}</span>
+                </button>
 
-    Login / Signup
-  </Link>
-</div>
+                {userMenuOpen && (
+                  <div className={`absolute bottom-full mb-2 w-full rounded-md shadow-lg z-50 ${
+                    theme === "dark" ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-300"
+                  }`}>
+                    <Link
+                      href="/profile"
+                      onClick={() => {
+                        setIsOpen(false);
+                        setUserMenuOpen(false);
+                      }}
+                      className={`block px-4 py-2 text-sm rounded-t-md ${
+                        theme === "dark"
+                          ? "text-gray-200 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className={`w-full text-left px-4 py-2 text-sm rounded-b-md flex items-center gap-2 ${
+                        theme === "dark"
+                          ? "text-red-400 hover:bg-gray-700"
+                          : "text-red-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      <FaSignOutAlt size={14} />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth/signup"
+                onClick={() => setIsOpen(false)}
+                className={`
+                  w-full py-3 px-5 text-center font-semibold text-sm 
+                  rounded-full transition-all duration-300 relative overflow-hidden
+                  flex items-center justify-center
+                  ${
+                    theme === "dark"
+                      ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
+                      : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
+                  }
+                  hover:scale-[1.03]
+                `}
+              >
+                {/* Inner sheen effect */}
+                <span
+                  className={`
+                    absolute inset-0 rounded-full pointer-events-none
+                    ${
+                      theme === "dark"
+                        ? "bg-linear-to-r from-transparent via-white/20 to-transparent opacity-40"
+                        : "bg-linear-to-r from-transparent via-gray-300/20 to-transparent opacity-40"
+                    }
+                  `}
+                ></span>
 
+                Login / Signup
+              </Link>
+            )}
+          </div>
 
           {/* Divider */}
           <div className="border-t border-gray-300 dark:border-gray-700 mx-4 my-3" />
