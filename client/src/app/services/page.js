@@ -4,43 +4,114 @@ import { ThemeContext } from "@/context/ThemeContext";
 
 export default function ServicesPage() {
   const { theme } = useContext(ThemeContext);
-  const bg = theme === "dark"
-    ? "bg-gradient-to-b from-black via-gray-900 to-gray-800"
-    : "bg-gray-100";
-  const cardBg = theme === "dark" ? "bg-black" : "bg-white";
-  const borderColor = theme === "dark" ? "border-gray-800" : "border-gray-300";
-  const textColor = theme === "dark" ? "text-white" : "text-gray-900";
-  const subText = theme === "dark" ? "text-gray-300" : "text-gray-700";
 
   return (
-    <div className={`relative w-full min-h-screen ${bg} transition-colors duration-300`}>
-      <main className="flex flex-col items-center justify-center px-4 py-12">
-        <div className={`max-w-2xl w-full ${cardBg} rounded-2xl shadow-2xl p-8 border mx-auto ${borderColor}`}>
-          <h1 className={`text-3xl font-bold mb-4 ${textColor} text-center`}>Our Services</h1>
-          <p className={`mb-6 ${subText} text-center`}>
-            At NutriLens, we offer a suite of services designed to help you take control of your nutrition and well-being. Whether you’re just starting your health journey or looking to optimize your diet, our tools and expertise are here for you.
+    <div
+      className={`
+        relative w-full min-h-screen overflow-hidden 
+        ${theme === "dark" 
+          ? "bg-linear-to-b from-black via-gray-900 to-gray-800" 
+          : "bg-linear-to-br from-white via-gray-200 to-blue-100"
+        }
+        transition-colors duration-500
+      `}
+    >
+
+      {/* ✅ Animated S-shaped gradient overlay */}
+      <div
+        className="s-ambient-gradient absolute inset-0 opacity-70"
+      ></div>
+
+      <main className="relative flex flex-col items-center px-4 py-16 animate-fadeIn">
+
+        {/* ✅ Glassmorphic Card */}
+        <div
+          className={`
+            relative max-w-3xl w-full p-10 rounded-3xl glass-card smooth-transition
+            ${theme === "dark" ? "glow-border-dark" : "glow-border-light"}
+          `}
+        >
+
+          {/* ✅ Subtle gradient sheen overlay */}
+          <div
+            className={`
+              absolute inset-0 rounded-3xl opacity-40 blur-xl pointer-events-none
+              ${theme === "dark"
+                ? "bg-linear-to-r from-white/20 via-transparent to-white/20"
+                : "bg-linear-to-r from-gray-200 via-transparent to-gray-200"}
+            `}
+          ></div>
+
+          {/* ✅ Title */}
+          <h1
+            className={`
+              relative text-4xl font-extrabold text-center mb-6 
+              ${theme === "dark" ? "text-white" : "text-gray-900"}
+            `}
+          >
+            🌟 Our Services
+          </h1>
+
+          <p
+            className={`
+              relative text-center text-lg mb-10
+              ${theme === "dark" ? "text-gray-300" : "text-gray-700"}
+            `}
+          >
+            Everything you need to take control of your nutrition — smart, simple, and personalized.
           </p>
-          <section className={`space-y-6 ${subText}`}>
-            <h2 className="text-xl font-semibold mb-2">Nutrition Analysis</h2>
-            <p>
-              Instantly access detailed nutritional breakdowns for thousands of food products and recipes. Our advanced algorithms help you understand calories, macronutrients, vitamins, minerals, and more—so you can make informed choices every day.
-            </p>
-            <h2 className="text-xl font-semibold mb-2">Personalized Recommendations</h2>
-            <p>
-              Receive custom suggestions based on your dietary preferences, health goals, and lifestyle. NutriLens adapts to your needs, whether you’re managing a condition, training for an event, or simply aiming to eat better.
-            </p>
-            <h2 className="text-xl font-semibold mb-2">Meal & Diet Planning</h2>
-            <p>
-              Build meal plans that fit your schedule and tastes. Our platform helps you organize shopping lists, track ingredients, and stay on top of your nutrition targets.
-            </p>
-            <h2 className="text-xl font-semibold mb-2">Progress Tracking</h2>
-            <p>
-              Monitor your progress with easy-to-read charts and analytics. Set goals, log meals, and celebrate your achievements as you move toward a healthier lifestyle.
-            </p>
-            <h2 className="text-xl font-semibold mb-2">Expert Support & Community</h2>
-            <p>
-              Connect with our team of nutritionists and join a supportive community. Get advice, share experiences, and stay motivated with NutriLens.
-            </p>
+
+          {/* ✅ Services List */}
+          <section className="relative space-y-10">
+
+            {/* === SERVICE CARD TEMPLATE === */}
+            <div className="hover-lift transition-all group">
+              <h2 className={`text-2xl font-semibold mb-2 flex items-center gap-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                🍏 Nutrition Analysis
+              </h2>
+              <p className={`${theme === "dark" ? "text-gray-200" : "text-gray-800"} group-hover:translate-x-1 transition`}>
+                Instantly access detailed nutritional breakdowns for thousands of food products and recipes.
+                Understand calories, macronutrients, vitamins, minerals — and make smarter choices every day.
+              </p>
+            </div>
+
+            <div className="hover-lift transition-all group">
+              <h2 className={`text-2xl font-semibold mb-2 flex items-center gap-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                🎯 Personalized Recommendations
+              </h2>
+              <p className={`${theme === "dark" ? "text-gray-200" : "text-gray-800"} group-hover:translate-x-1 transition`}>
+                Tailored suggestions based on your goals, dietary preferences, and lifestyle — designed to
+                fit you, not the other way around.
+              </p>
+            </div>
+
+            <div className="hover-lift transition-all group">
+              <h2 className={`text-2xl font-semibold mb-2 flex items-center gap-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                🥗 Meal & Diet Planning
+              </h2>
+              <p className={`${theme === "dark" ? "text-gray-200" : "text-gray-800"} group-hover:translate-x-1 transition`}>
+                Build custom meal plans, generate shopping lists, and stay organized — all while hitting your nutrition targets.
+              </p>
+            </div>
+
+            <div className="hover-lift transition-all group">
+              <h2 className={`text-2xl font-semibold mb-2 flex items-center gap-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                📊 Progress Tracking
+              </h2>
+              <p className={`${theme === "dark" ? "text-gray-200" : "text-gray-800"} group-hover:translate-x-1 transition`}>
+                Monitor your journey with intuitive charts and analytics. Set goals, log meals, and celebrate your achievements.
+              </p>
+            </div>
+
+            <div className="hover-lift transition-all group">
+              <h2 className={`text-2xl font-semibold mb-2 flex items-center gap-3 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                💬 Expert Support & Community
+              </h2>
+              <p className={`${theme === "dark" ? "text-gray-200" : "text-gray-800"} group-hover:translate-x-1 transition`}>
+                Connect with experts and like-minded individuals. Get personalized advice, share experiences, and stay motivated.
+              </p>
+            </div>
+
           </section>
         </div>
       </main>

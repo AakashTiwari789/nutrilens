@@ -1,43 +1,148 @@
-
-
-
 "use client";
 import React, { useContext } from "react";
 import { ThemeContext } from "@/context/ThemeContext";
 
-
 export default function ContactPage() {
-	const { theme } = useContext(ThemeContext);
-	const bg = theme === "dark"
-		? "bg-gradient-to-b from-black via-gray-900 to-gray-800"
-		: "bg-gray-100";
-	const cardBg = theme === "dark" ? "bg-black" : "bg-white";
-	const borderColor = theme === "dark" ? "border-gray-800" : "border-gray-300";
-	const textColor = theme === "dark" ? "text-white" : "text-gray-900";
-	const subText = theme === "dark" ? "text-gray-300" : "text-gray-700";
-	const inputBg = theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-gray-200 text-gray-900";
-	const buttonBg = theme === "dark" ? "bg-gray-700 hover:bg-gray-600 text-gray-100" : "bg-gray-500 hover:bg-gray-400 text-white";
-	const linkColor = theme === "dark" ? "text-gray-400 hover:text-gray-100" : "text-gray-700 hover:text-gray-900";
+  const { theme } = useContext(ThemeContext);
 
-	return (
-		<div className={`relative w-full min-h-screen ${bg} transition-colors duration-300`}>
-			<main className="relative flex flex-col items-center justify-center px-4 py-8 z-10">
-				<div className={`max-w-xl w-full ${cardBg} rounded-2xl shadow-2xl p-8 border mx-auto ${borderColor}`}>
-					<h1 className={`text-3xl font-bold mb-4 ${textColor} text-center`}>Contact Us</h1>
-					<p className={`mb-8 ${subText} text-center`}>We'd love to hear from you! Fill out the form below and we'll get back to you soon.</p>
-					<form className="flex flex-col gap-4">
-						<input type="text" placeholder="Your Name" className={`${inputBg} rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-700`} required />
-						<input type="email" placeholder="Your Email" className={`${inputBg} rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-700`} required />
-						<textarea placeholder="Your Message" rows={5} className={`${inputBg} rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-700`} required />
-						<button type="submit" className={`${buttonBg} font-bold py-2 px-6 rounded-lg transition`}>Send Message</button>
-					</form>
-					<div className={`mt-8 text-center ${subText}`}>
-						<div>Email: <a href="mailto:info@nutrilens.com" className={linkColor + " hover:underline"}>info@nutrilens.com</a></div>
-						<div>Phone: <a href="tel:+1234567890" className={linkColor + " hover:underline"}>+1 (234) 567-890</a></div>
-						<div>Address: #112, Church Street, Bengaluru-560064</div>
-					</div>
-				</div>
-			</main>
-		</div>
-	);
+  const textColor = theme === "dark" ? "text-white" : "text-gray-900";
+  const subText = theme === "dark" ? "text-gray-300" : "text-gray-700";
+
+  return (
+    <div
+      className={`
+        relative w-full min-h-screen overflow-hidden 
+        ${theme === "dark"
+          ? "bg-linear-to-b from-black via-gray-900 to-gray-800"
+          : "bg-linear-to-br from-white via-gray-200 to-blue-100"}
+        transition-colors duration-500
+      `}
+    >
+      {/* ✅ Ambient fluid gradient */}
+      <div className="s-ambient-gradient absolute inset-0 opacity-70"></div>
+
+      <main className="relative flex flex-col items-center px-4 py-16 animate-fadeIn">
+
+        {/* ✅ Glass Card */}
+        <div
+          className={`
+            relative max-w-xl w-full p-10 rounded-3xl glass-card smooth-transition
+            ${theme === "dark" ? "glow-border-dark" : "glow-border-light"}
+          `}
+        >
+          {/* Lens-like sheen */}
+          <div
+            className={`
+              absolute inset-0 rounded-3xl opacity-40 blur-xl pointer-events-none
+              ${theme === "dark"
+                ? "bg-linear-to-r from-white/20 via-transparent to-white/20"
+                : "bg-linear-to-r from-gray-200 via-transparent to-gray-200"}
+            `}
+          ></div>
+
+          {/* Header */}
+          <h1 className={`relative text-4xl font-extrabold text-center mb-4 ${textColor}`}>
+            📩 Contact Us
+          </h1>
+
+          <p className={`relative mb-10 text-center text-lg ${subText}`}>
+            We'd love to hear from you! Reach out with any questions or feedback.
+          </p>
+
+          {/* Form */}
+          <form className="relative flex flex-col gap-6">
+
+            {/* Name field */}
+            <div className="hover-lift transition-all">
+              <label className={`block mb-2 font-semibold ${textColor}`}>Your Name</label>
+              <input
+                type="text"
+                placeholder="Enter your name"
+                required
+                className={`
+                  w-full px-5 py-3 rounded-xl
+                  bg-white/40 dark:bg-black/30
+                  backdrop-blur-xl smooth-transition
+                  border border-white/40 dark:border-gray-500/40
+                  shadow-md focus:ring-2 focus:ring-blue-400/60 
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-600 dark:placeholder-gray-300
+                `}
+              />
+            </div>
+
+            {/* Email field */}
+            <div className="hover-lift transition-all">
+              <label className={`block mb-2 font-semibold ${textColor}`}>Your Email</label>
+              <input
+                type="email"
+                placeholder="Enter your email"
+                required
+                className={`
+                  w-full px-5 py-3 rounded-xl
+                  bg-white/40 dark:bg-black/30
+                  backdrop-blur-xl smooth-transition
+                  border border-white/40 dark:border-gray-500/40
+                  shadow-md focus:ring-2 focus:ring-blue-400/60 
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-600 dark:placeholder-gray-300
+                `}
+              />
+            </div>
+
+            {/* Message field */}
+            <div className="hover-lift transition-all">
+              <label className={`block mb-2 font-semibold ${textColor}`}>Your Message</label>
+              <textarea
+                rows={5}
+                placeholder="Type your message..."
+                required
+                className={`
+                  w-full px-5 py-3 rounded-xl
+                  bg-white/40 dark:bg-black/30
+                  backdrop-blur-xl smooth-transition
+                  border border-white/40 dark:border-gray-500/40
+                  shadow-md focus:ring-2 focus:ring-blue-400/60 
+                  text-gray-900 dark:text-gray-100
+                  placeholder-gray-600 dark:placeholder-gray-300 resize-none
+                `}
+              />
+            </div>
+
+            {/* Submit button */}
+            <button
+              type="submit"
+              className={`
+                w-full py-3 mt-2 rounded-xl text-lg font-bold
+                transition transform hover:scale-105 hover:shadow-xl
+                ${theme === "dark"
+                  ? "bg-blue-600 text-white hover:bg-blue-500"
+                  : "bg-blue-500 text-white hover:bg-blue-600"}
+              `}
+            >
+              Send Message →
+            </button>
+          </form>
+
+          {/* Contact Info */}
+          <div className={`relative mt-10 text-center text-sm ${subText}`}>
+            <p className="mb-1">
+              📧 Email:{" "}
+              <a href="mailto:info@nutrilens.com" className="underline hover:text-blue-400">
+                info@nutrilens.com
+              </a>
+            </p>
+            <p className="mb-1">
+              📞 Phone:{" "}
+              <a href="tel:+1234567890" className="underline hover:text-blue-400">
+                +1 (234) 567-890
+              </a>
+            </p>
+            <p>📍 Address: #112, Church Street, Bengaluru-560064</p>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
 }
