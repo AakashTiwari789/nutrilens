@@ -1,12 +1,14 @@
 "use client";
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useContext } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { AuthContext } from '@/context/AuthContext';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const message = searchParams.get('message');
+  const { login } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -22,7 +24,6 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      // Determine if input is email or username
       const identifier = formData.email.trim();
       if (!identifier || !formData.password) {
         setError('Please enter both email/username and password');
@@ -36,7 +37,6 @@ function LoginForm() {
         password: formData.password,
       };
       
-      // Send as email or username based on input
       if (isEmail) {
         requestBody.email = identifier.toLowerCase();
       } else {
@@ -63,6 +63,9 @@ function LoginForm() {
       }
 
       if (response.ok && data.success && data.data && data.data.user) {
+        // Update auth context
+        login(data.data.user);
+        
         // Redirect based on user role
         switch (data.data.user.role) {
           case 'admin':
