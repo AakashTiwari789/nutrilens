@@ -103,7 +103,7 @@ export const updateNewsImage = asyncHandler(async (req, res, next) => {
     }
 
     const oldImageUrl = news.newsImage;
-    console.log("Old Image URL:", oldImageUrl);
+    // console.log("Old Image URL:", oldImageUrl);
 
     const newsImage = await uploadNewsImageOnImageKit(newsImageLocalPath);
 

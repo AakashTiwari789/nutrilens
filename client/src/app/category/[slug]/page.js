@@ -47,13 +47,13 @@ export default function CategoryPage() {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
         const apiUrl = `${baseUrl}/product/get-products`;
         
-        console.log('Fetching from:', apiUrl); // Debug log
+        // console.log('Fetching from:', apiUrl); // Debug log
         
         const response = await fetch(apiUrl);
         const data = await response.json();
         
-        console.log('API Response:', data); // Debug log
-        console.log('Selected Category:', selectedCategory); // Debug log
+        // console.log('API Response:', data); // Debug log
+        // console.log('Selected Category:', selectedCategory); // Debug log
         
         if (data.success) {
           // Extract products from the correct path in the response
@@ -64,17 +64,17 @@ export default function CategoryPage() {
             const productCategory = product.category?.toLowerCase().trim() || '';
             const selectedCat = selectedCategory.replace(/-/g, " ").toLowerCase().trim();
             
-            console.log('Comparing:', {
-              product: product.name,
-              productCategory,
-              selectedCategory: selectedCat,
-              isApproved: product.isApproved
-            });
+            // console.log('Comparing:', {
+            //   product: product.name,
+            //   productCategory,
+            //   selectedCategory: selectedCat,
+            //   isApproved: product.isApproved
+            // });
             
             return productCategory === selectedCat;
           });
           
-          console.log('Filtered Products:', filteredProducts); // Debug log
+          // console.log('Filtered Products:', filteredProducts); // Debug log
           setItems(filteredProducts);
           setCurrentPage(1); // Reset to first page when category changes
         } else {
@@ -120,7 +120,7 @@ export default function CategoryPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="flex-1 md:ml-48 p-8">
+      <div className="flex-1 md:ml-48 mt-4 px-8">
         <Header />
         <h1 className="text-3xl font-bold mb-6 capitalize text-gray-800 dark:text-white">
           {selectedCategory.replace(/-/g, " ")}

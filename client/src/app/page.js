@@ -140,7 +140,7 @@ export default function HomePage() {
   return (
     <div className={`${bg} min-h-screen transition-colors duration-300`}>
       <Sidebar />
-      <main className="md:ml-48 p-8 min-h-screen overflow-y-auto relative">
+      <main className="md:ml-48 px-8 mt-4 min-h-screen overflow-y-auto relative">
         <Header />
 
         {/* Auto Image Slider */}

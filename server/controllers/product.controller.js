@@ -7,7 +7,7 @@ import { deleteFromImageKit, getFileIdFromUrl, uploadProductOnImageKit } from ".
 import { getUserById, getUserDetailsById } from "./user.controller.js";
 
 export const getProductById = asyncHandler(async (req, res, next) => {
-    console.log("Fetching product by ID", req.params.productId);
+    // console.log("Fetching product by ID", req.params.productId);
     const { productId } = req.params;
 
     const product = await getProductDetailsByProductId(productId);

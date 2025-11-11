@@ -69,10 +69,10 @@ function LoginForm() {
         // Redirect based on user role
         switch (data.data.user.role) {
           case 'admin':
-            router.push('/admin/');
+            router.push('/profile/admin/');
             break;
           case 'company':
-            router.push('/company/');
+            router.push('/profile/company/');
             break;
           default:
             router.push('/');

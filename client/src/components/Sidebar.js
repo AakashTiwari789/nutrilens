@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -7,6 +7,8 @@ import Image from "next/image";
 import { ThemeContext } from "../context/ThemeContext";
 import { AuthContext } from "../context/AuthContext";
 import { FaBars, FaTimes, FaChevronDown, FaChevronUp, FaUser, FaSignOutAlt } from "react-icons/fa";
+import navItems from "./NavItems.js";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +17,29 @@ const Sidebar = () => {
   const pathname = usePathname();
   const { theme } = useContext(ThemeContext);
   const { user, isAuthenticated, logout, loading } = useContext(AuthContext);
+
+  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const menuButtonRef = useRef(null);
+
+  const toggleSubmenu = (title) => {
+    setOpenSubmenu(openSubmenu === title ? null : title);
+  };
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const closeSidebar = () => {
+    if (window.innerWidth < 768) {
+      setIsOpen(false);
+    }
+  };
+
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) {
+      onLinkClick();
+    }
+  };
 
   const menuItems = [
     { name: "Home", path: "/" },
@@ -71,65 +96,87 @@ const Sidebar = () => {
           ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         <div className="flex flex-col h-full">
-          <Image
-            src="/images/nutrilens_logo.png"
-            alt="NutriLens Logo"
-            width={60}
-            height={60}
-            className="rounded-full object-cover ml-6 mt-8"
-            priority
-          />
+          <div className="flex items-center">
+            <Image
+              src="/images/nutrilens_logo.png"
+              alt="NutriLens Logo"
+              width={30}
+              height={30}
+              className="rounded-full object-cover ml-6 mt-6"
+              priority
+            />
+            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100 mt-6 ml-6">
+              NutriLens
+            </h1>
+          </div>
 
           {/* Menu */}
-          <nav className="mt-4 px-4">
-            <ul className="flex flex-col space-y-2">
-              {menuItems.map((item) => (
+          <nav className="p-2 mt-4 overflow-y-auto h-[calc(100vh-64px)] md:h-auto">
+            <ul className="space-y-1">
+              {navItems.map((item) => (
                 <li key={item.name}>
-                  <Link
-                    href={item.path}
-                    onClick={() => setIsOpen(false)}
-                    className="block px-3 py-2 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition"
-                  >
-                    {item.name}
-                  </Link>
+                  {item.dropdown ? (
+                    // Dropdown menu
+                    <div>
+                      <button
+                        onClick={() => toggleSubmenu(item.name)}
+                        className="flex items-center justify-between w-full p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium"
+                      >
+                        <span className="flex items-center gap-2">
+                          {item.icon}
+                          {item.name}
+                        </span>
+                        {openSubmenu === item.name ? (
+                          <ChevronDown size={16} />
+                        ) : (
+                          <ChevronRight size={16} />
+                        )}
+                      </button>
+
+                      <ul
+                        className={`ml-6 mt-1 space-y-2 overflow-hidden transition-all duration-200 ${openSubmenu === item.name ? "max-h-40 overflow-y-auto" : "max-h-0"
+                          }`}
+                      >
+                        {item.dropdown.map((subitem) => (
+                          <li key={subitem.name}>
+                            {!!subitem.url ? (
+                              <Link
+                                href={subitem.url}
+                                className="block p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                onClick={closeSidebar}
+                              >
+                                {subitem.name}
+                              </Link>
+                            ) : (
+                              <span className="block p-2 text-[#8B3A32] font-medium">
+                                {subitem.name}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : !!item.url ? (
+                    // Normal item with url
+                    <Link
+                      href={item.url}
+                      className="flex items-center gap-2 p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium"
+                      onClick={closeSidebar}
+                    >
+                      {item.icon}
+                      {item.name}
+                    </Link>
+                  ) : (
+                    // No url → render as plain text (e.g., department title)
+                    <span className="flex items-center gap-2 p-2 text-red-700 font-bold">
+                      {item.icon}
+                      {item.name}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
           </nav>
-
-          {/* Categories Dropdown */}
-          <div className="px-4 mt-2">
-            <button
-              onClick={() => setCatsOpen(!catsOpen)}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            >
-              <span className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition">
-                Categories
-              </span>
-              <span className="text-gray-500 dark:text-gray-300">
-                {catsOpen ? <FaChevronUp /> : <FaChevronDown />}
-              </span>
-            </button>
-
-            {catsOpen && (
-              <ul className="mt-2 max-h-36 overflow-auto space-y-1">
-                {categories.map((cat) => (
-                  <li key={cat.value}>
-                    <Link
-                      href={`/category/${cat.value}`}
-                      onClick={() => setIsOpen(false)}
-                      className={`block px-3 py-2 rounded-md text-sm transition ${isActiveCategory(cat.value)
-                        ? "bg-blue-100 text-black"
-                        : "text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-                        }`}
-                    >
-                      {cat.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
 
           {/* Spacer pushes remaining items to bottom */}
           <div className="grow" />
@@ -144,10 +191,9 @@ const Sidebar = () => {
                     w-full py-3 px-5 text-center font-semibold text-sm 
                     rounded-full transition-all duration-300 relative overflow-hidden
                     flex items-center justify-center gap-2
-                    ${
-                      theme === "dark"
-                        ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
-                        : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
+                    ${theme === "dark"
+                      ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
+                      : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
                     }
                     hover:scale-[1.03]
                   `}
@@ -157,30 +203,27 @@ const Sidebar = () => {
                 </button>
 
                 {userMenuOpen && (
-                  <div className={`absolute bottom-full mb-2 w-full rounded-md shadow-lg z-50 ${
-                    theme === "dark" ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-300"
-                  }`}>
+                  <div className={`absolute bottom-full mb-2 w-full rounded-md shadow-lg z-50 ${theme === "dark" ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-300"
+                    }`}>
                     <Link
                       href="/profile"
                       onClick={() => {
                         setIsOpen(false);
                         setUserMenuOpen(false);
                       }}
-                      className={`block px-4 py-2 text-sm rounded-t-md ${
-                        theme === "dark"
-                          ? "text-gray-200 hover:bg-gray-700"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
+                      className={`block px-4 py-2 text-sm rounded-t-md ${theme === "dark"
+                        ? "text-gray-200 hover:bg-gray-700"
+                        : "text-gray-700 hover:bg-gray-100"
+                        }`}
                     >
                       Profile
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className={`w-full text-left px-4 py-2 text-sm rounded-b-md flex items-center gap-2 ${
-                        theme === "dark"
-                          ? "text-red-400 hover:bg-gray-700"
-                          : "text-red-600 hover:bg-gray-100"
-                      }`}
+                      className={`w-full text-left px-4 py-2 text-sm rounded-b-md flex items-center gap-2 ${theme === "dark"
+                        ? "text-red-400 hover:bg-gray-700"
+                        : "text-red-600 hover:bg-gray-100"
+                        }`}
                     >
                       <FaSignOutAlt size={14} />
                       Logout
@@ -196,10 +239,9 @@ const Sidebar = () => {
                   w-full py-3 px-5 text-center font-semibold text-sm 
                   rounded-full transition-all duration-300 relative overflow-hidden
                   flex items-center justify-center
-                  ${
-                    theme === "dark"
-                      ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
-                      : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
+                  ${theme === "dark"
+                    ? "bg-linear-to-r from-white/80 via-gray-200 to-white/70 text-black shadow-lg shadow-white/20 border border-white/20 hover:shadow-white/40"
+                    : "bg-linear-to-r from-black via-gray-800 to-black text-white shadow-lg shadow-black/20 border border-black/20 hover:shadow-black/40"
                   }
                   hover:scale-[1.03]
                 `}
@@ -208,10 +250,9 @@ const Sidebar = () => {
                 <span
                   className={`
                     absolute inset-0 rounded-full pointer-events-none
-                    ${
-                      theme === "dark"
-                        ? "bg-linear-to-r from-transparent via-white/20 to-transparent opacity-40"
-                        : "bg-linear-to-r from-transparent via-gray-300/20 to-transparent opacity-40"
+                    ${theme === "dark"
+                      ? "bg-linear-to-r from-transparent via-white/20 to-transparent opacity-40"
+                      : "bg-linear-to-r from-transparent via-gray-300/20 to-transparent opacity-40"
                     }
                   `}
                 ></span>

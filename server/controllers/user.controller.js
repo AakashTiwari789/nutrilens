@@ -406,7 +406,7 @@ export const getAllProductsOfTheCompany = asyncHandler(async (req, res, next) =>
         .select("-password -refreshToken")
         .populate('products', 'name category description productId price productImage isApproved');
 
-    console.log(user)
+    // console.log(user)
 
     const products = user.products || [];
 
