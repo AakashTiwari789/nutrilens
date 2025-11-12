@@ -6,6 +6,7 @@ import { User } from "../models/user.model.js";
 import { deleteFromImageKit, getFileIdFromUrl, uploadProductOnImageKit } from "../utils/ImageKit.js";
 import { getUserById, getUserDetailsById } from "./user.controller.js";
 
+
 export const getProductById = asyncHandler(async (req, res, next) => {
     // console.log("Fetching product by ID", req.params.productId);
     const { productId } = req.params;
