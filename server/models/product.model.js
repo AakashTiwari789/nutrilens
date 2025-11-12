@@ -78,6 +78,11 @@ const productSchema = new Schema(
             type: Number,
             required: true,
         },
+        // In the productSchema, add:
+        approvalRequested: {
+            type: Boolean,
+            default: false,
+        },
         tags: [{
             type: String,
             enum: ['vegan', 'vegetarian', 'gluten-free', 'sugar-free', 'low-fat', 'organic', 'non-GMO', 'high-protein', 'keto-friendly', 'paleo-friendly', 'dairy-free', 'nut-free', 'soy-free'],

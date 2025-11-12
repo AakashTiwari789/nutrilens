@@ -10,8 +10,22 @@ export default function CompanyProductsPage() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [editingProduct, setEditingProduct] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    category: "",
+    description: "",
+    productId: "",
+    price: "",
+    manufacturingDate: "",
+    expiryDate: "",
+    nutritionalInfo: JSON.stringify({}),
+    ingredients: JSON.stringify([]),
+    tags: JSON.stringify([]),
+  });
+  const [productImage, setProductImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     if (!loading && (!isAuthenticated || !user || user.role !== "company")) {
@@ -46,6 +60,76 @@ export default function CompanyProductsPage() {
       setError("Failed to load products");
     } finally {
       setLoadingProducts(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProductImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setSubmitting(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const formDataToSend = new FormData();
+      
+      Object.keys(formData).forEach(key => {
+        formDataToSend.append(key, formData[key]);
+      });
+      
+      if (productImage) {
+        formDataToSend.append("productImage", productImage);
+      }
+
+      const resp = await fetch(`${apiUrl}/product/register`, {
+        method: "POST",
+        credentials: "include",
+        body: formDataToSend,
+      });
+
+      const data = await resp.json();
+      if (resp.ok && data?.success) {
+        setSuccess("Product submitted for approval successfully");
+        setShowAddForm(false);
+        setFormData({
+          name: "",
+          category: "",
+          description: "",
+          productId: "",
+          price: "",
+          manufacturingDate: "",
+          expiryDate: "",
+          nutritionalInfo: JSON.stringify({}),
+          ingredients: JSON.stringify([]),
+          tags: JSON.stringify([]),
+        });
+        setProductImage(null);
+        setImagePreview(null);
+        await loadProducts();
+      } else {
+        setError(data?.message || "Failed to submit product");
+      }
+    } catch (err) {
+      setError("Failed to submit product");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,13 +173,21 @@ export default function CompanyProductsPage() {
     );
   }
 
+  const categories = [
+    'biscuits', 'breakfast and spreads', 'chocolates and desserts', 
+    'cold drinks and juices', 'dairy, bread and eggs', 'instant foods', 
+    'snacks', 'cakes and bakes', 'dry fruits, oil and masalas', 
+    'meat', 'rice, atta and dals', 'tea, coffee and more', 
+    'supplements and mores'
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 md:ml-48">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Manage Products</h1>
           <button
-            onClick={() => router.push("/company/products/add")}
+            onClick={() => setShowAddForm(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Add New Product
@@ -117,7 +209,7 @@ export default function CompanyProductsPage() {
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <div className="text-gray-500 text-lg mb-4">No products found</div>
             <button
-              onClick={() => router.push("/company/products/add")}
+              onClick={() => setShowAddForm(true)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Add Your First Product
@@ -164,6 +256,189 @@ export default function CompanyProductsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Add Product Modal */}
+        {showAddForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Add New Product</h2>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setFormData({
+                      name: "",
+                      category: "",
+                      description: "",
+                      productId: "",
+                      price: "",
+                      manufacturingDate: "",
+                      expiryDate: "",
+                      nutritionalInfo: JSON.stringify({}),
+                      ingredients: JSON.stringify([]),
+                      tags: JSON.stringify([]),
+                    });
+                    setProductImage(null);
+                    setImagePreview(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <form onSubmit={handleAddProduct} className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Product ID *</label>
+                    <input
+                      type="number"
+                      name="productId"
+                      value={formData.productId}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Manufacturing Date *</label>
+                    <input
+                      type="date"
+                      name="manufacturingDate"
+                      value={formData.manufacturingDate}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+                    <input
+                      type="date"
+                      name="expiryDate"
+                      value={formData.expiryDate}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full border rounded-md px-3 py-2"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full border rounded-md px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nutritional Info (JSON) *</label>
+                  <textarea
+                    name="nutritionalInfo"
+                    value={formData.nutritionalInfo}
+                    onChange={handleInputChange}
+                    required
+                    rows={4}
+                    className="w-full border rounded-md px-3 py-2 font-mono text-sm"
+                    placeholder='{"calories": 100, "protein": 5, ...}'
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ingredients (JSON Array) *</label>
+                  <textarea
+                    name="ingredients"
+                    value={formData.ingredients}
+                    onChange={handleInputChange}
+                    required
+                    rows={3}
+                    className="w-full border rounded-md px-3 py-2 font-mono text-sm"
+                    placeholder='["ingredient1", "ingredient2", ...]'
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags (JSON Array)</label>
+                  <textarea
+                    name="tags"
+                    value={formData.tags}
+                    onChange={handleInputChange}
+                    rows={2}
+                    className="w-full border rounded-md px-3 py-2 font-mono text-sm"
+                    placeholder='["vegan", "gluten-free", ...]'
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Image *</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    required
+                    className="w-full border rounded-md px-3 py-2"
+                  />
+                  {imagePreview && (
+                    <img src={imagePreview} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-md border" />
+                  )}
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {submitting ? "Submitting..." : "Submit for Approval"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>

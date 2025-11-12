@@ -24,6 +24,20 @@ export const getProductById = asyncHandler(async (req, res, next) => {
     );
 });
 
+export const getAllProducts = asyncHandler(async (req, res, next) => {
+    const products = await Product.find({ isApproved: true })
+        .populate('companyId', 'fullName username email')
+        .sort({ createdAt: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { products },
+            "All products fetched successfully"
+        )
+    );
+});
+
 export const getProductDetailsById = async (productId) => {
     const product = await Product.findById(productId);
 
@@ -50,10 +64,9 @@ export const registerProduct = asyncHandler(async (req, res, next) => {
     const user = await getUserDetailsById(req.user?._id);
 
     if (user.role !== 'company' || user.accountStatus !== 'verified') {
-        throw new ApiError(403, "Only approved companies can register products");
+        throw new ApiError(403, "Only verified companies can register products");
     }
 
-    // console.log(`Registering product with ID: ${productId}`);
     const existedProduct = await Product.findOne({ productId: productId });
 
     if (existedProduct) {
@@ -88,6 +101,8 @@ export const registerProduct = asyncHandler(async (req, res, next) => {
         tags: tags ? JSON.parse(tags) : [],
         productImage: productImage.url,
         companyId: user._id,
+        isApproved: false, // Start as unapproved
+        approvalRequested: true, // Mark as requested for approval
     });
 
     const createdProduct = await getProductDetailsById(product._id);
@@ -96,33 +111,176 @@ export const registerProduct = asyncHandler(async (req, res, next) => {
         throw new ApiError(500, "Something went wrong while creating product");
     }
 
-    await User.findByIdAndUpdate(
-        user._id,
-        { $push: { products: createdProduct._id } },
-        { new: true }
-    );
-
     return res.status(201).json(
         new ApiResponse(
             201,
             {
                 createdProduct,
             },
-            "Product registered successfully"
+            "Product submitted for approval"
         )
     );
 });
 
-export const getAllProducts = asyncHandler(async (req, res, next) => {
-    const products = await Product.find().select('-nutritionalInfo -ingredients -createdAt -updatedAt -__v -certifications -alternatives -diseases');
+// Get pending product approval requests (Admin only)
+export const getPendingProductApprovals = asyncHandler(async (req, res, next) => {
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId);
+
+    if (!admin || admin.role !== "admin") {
+        throw new ApiError(403, "Only admins can access this endpoint");
+    }
+
+    const pendingProducts = await Product.find({
+        approvalRequested: true,
+        isApproved: false
+    })
+        .populate('companyId', 'fullName username email')
+        .sort({ createdAt: -1 });
 
     return res.status(200).json(
         new ApiResponse(
             200,
-            {
-                products,
-            },
-            "Products fetched successfully"
+            { products: pendingProducts },
+            "Pending product approval requests fetched successfully"
+        )
+    );
+});
+
+// Approve or deny product request (Admin only)
+export const handleProductApproval = asyncHandler(async (req, res, next) => {
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId);
+
+    if (!admin || admin.role !== "admin") {
+        throw new ApiError(403, "Only admins can handle product approvals");
+    }
+
+    const { productId, action } = req.body; // action: "approve" or "deny"
+
+    if (!productId || !action) {
+        throw new ApiError(400, "Product ID and action are required");
+    }
+
+    if (action !== "approve" && action !== "deny") {
+        throw new ApiError(400, "Action must be 'approve' or 'deny'");
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    if (!product.approvalRequested) {
+        throw new ApiError(400, "No pending approval request for this product");
+    }
+
+    if (action === "approve") {
+        product.isApproved = true;
+        product.approvalRequested = false;
+        await product.save();
+
+        // Add product to company's products array
+        await User.findByIdAndUpdate(
+            product.companyId,
+            { $push: { products: product._id } },
+            { new: true }
+        );
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                { product },
+                "Product approved successfully"
+            )
+        );
+    } else {
+        // Deny - delete the product
+        const oldImageFileId = await getFileIdFromUrl(product.productImage);
+        if (oldImageFileId) {
+            await deleteFromImageKit(oldImageFileId);
+        }
+        await Product.findByIdAndDelete(productId);
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {},
+                "Product approval denied and product removed"
+            )
+        );
+    }
+});
+
+// Get approved products (Admin only)
+export const getApprovedProducts = asyncHandler(async (req, res, next) => {
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId);
+
+    if (!admin || admin.role !== "admin") {
+        throw new ApiError(403, "Only admins can access this endpoint");
+    }
+
+    const approvedProducts = await Product.find({
+        isApproved: true
+    })
+        .populate('companyId', 'fullName username email')
+        .sort({ createdAt: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { products: approvedProducts },
+            "Approved products fetched successfully"
+        )
+    );
+});
+
+// Remove product approval (Admin only)
+export const removeProductApproval = asyncHandler(async (req, res, next) => {
+    const adminId = req.user._id;
+    const admin = await User.findById(adminId);
+
+    if (!admin || admin.role !== "admin") {
+        throw new ApiError(403, "Only admins can remove product approval");
+    }
+
+    const { productId } = req.body;
+
+    if (!productId) {
+        throw new ApiError(400, "Product ID is required");
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    if (!product.isApproved) {
+        throw new ApiError(400, "Product is not approved");
+    }
+
+    // Remove from company's products array
+    await User.findByIdAndUpdate(
+        product.companyId,
+        { $pull: { products: product._id } },
+        { new: true }
+    );
+
+    // Delete the product
+    const oldImageFileId = await getFileIdFromUrl(product.productImage);
+    if (oldImageFileId) {
+        await deleteFromImageKit(oldImageFileId);
+    }
+    await Product.findByIdAndDelete(productId);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {},
+            "Product approval removed and product deleted"
         )
     );
 });
