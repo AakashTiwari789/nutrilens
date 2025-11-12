@@ -175,27 +175,27 @@ const Sidebar = () => {
                   )}
                 </li>
               ))}
-              {/* Admin-only verification link */}
+              {/* Admin-only approval link */}
               {user?.role === "admin" && (
                 <>
                   <li>
                     <Link
-                      href="/admin/verification"
+                      href="/admin/approval"
                       className="flex items-center gap-2 p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium"
                       onClick={closeSidebar}
                     >
                       <FaShieldAlt size={18} />
-                      Verification List
+                      Approval Requests
                     </Link>
                   </li>
                   <li>
                     <Link
-                      href="/admin/company-verification"
+                      href="/admin/company-approval"
                       className="flex items-center gap-2 p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium"
                       onClick={closeSidebar}
                     >
                       <FaShieldAlt size={18} />
-                      Company List
+                      Approved Companies
                     </Link>
                   </li>
                 </>

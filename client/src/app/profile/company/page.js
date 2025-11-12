@@ -59,13 +59,13 @@ export default function CompanyProfilePage() {
     }
   }, [user]);
 
-  const handleRequestVerification = async () => {
+  const handleRequestApproval = async () => {
     if (user?.accountStatus === "verified") {
       setMessage({ type: "error", text: "Company is already verified" });
       return;
     }
-    if (user?.verificationRequested) {
-      setMessage({ type: "error", text: "Verification request already pending" });
+    if (user?.approvalRequested) {
+      setMessage({ type: "error", text: "Approval request already pending" });
       return;
     }
 
@@ -73,13 +73,13 @@ export default function CompanyProfilePage() {
     setMessage({ type: "", text: "" });
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-      const resp = await fetch(`${apiUrl}/user/request-verification`, {
+      const resp = await fetch(`${apiUrl}/user/request-approval`, {
         method: "POST",
         credentials: "include",
       });
       const data = await resp.json();
       if (resp.ok && data?.success) {
-        setMessage({ type: "success", text: "Verification request submitted successfully" });
+        setMessage({ type: "success", text: "Approval request submitted successfully" });
         // Refresh user data
         const profileResp = await fetch(`${apiUrl}/user/profile`, {
           credentials: "include",
@@ -91,10 +91,10 @@ export default function CompanyProfilePage() {
           }
         }
       } else {
-        setMessage({ type: "error", text: data?.message || "Failed to submit verification request" });
+        setMessage({ type: "error", text: data?.message || "Failed to submit approval request" });
       }
     } catch (err) {
-      setMessage({ type: "error", text: "Failed to submit verification request" });
+      setMessage({ type: "error", text: "Failed to submit approval request" });
     } finally {
       setRequesting(false);
     }
@@ -111,21 +111,21 @@ export default function CompanyProfilePage() {
           >
             Edit Profile
           </button>
-          {user?.accountStatus !== "verified" && !user?.verificationRequested && (
+          {user?.accountStatus !== "verified" && !user?.approvalRequested && (
             <button
-              onClick={handleRequestVerification}
+              onClick={handleRequestApproval}
               disabled={requesting}
               className="text-sm px-4 py-2 bg-black text-white rounded-md hover:bg-gray-600 disabled:opacity-50"
             >
-              {requesting ? "Submitting..." : "Request Verification"}
+              {requesting ? "Submitting..." : "Request Approval"}
             </button>
           )}
-          {user?.verificationRequested && (
+          {user?.approvalRequested && (
             <button
               disabled
               className="text-sm px-4 py-2 bg-yellow-500 text-white rounded-md opacity-75 cursor-not-allowed"
             >
-              Verification Requested
+              Approval Requested
             </button>
           )}
         </div>

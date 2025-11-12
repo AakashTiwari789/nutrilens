@@ -31,12 +31,12 @@ router.route("/get-all-products").get(authenticateUser, getAllProductsOfTheCompa
 
 router.route("/profile").get(authenticateUser, getMyProfile);
 
-// Verification routes
-router.route("/request-verification").post(authenticateUser, requestVerification);
-router.route("/pending-verifications").get(authenticateUser, getPendingVerificationRequests);
-router.route("/handle-verification").post(authenticateUser, handleVerificationRequest);
-router.route("/verified-companies").get(authenticateUser, getVerifiedCompanies);
-router.route("/remove-verification").post(authenticateUser, removeCompanyVerification);
+// Approval routes
+router.route("/request-approval").post(authenticateUser, requestVerification);
+router.route("/pending-approvals").get(authenticateUser, getPendingVerificationRequests);
+router.route("/handle-approval").post(authenticateUser, handleVerificationRequest);
+router.route("/approved-companies").get(authenticateUser, getVerifiedCompanies);
+router.route("/remove-approval").post(authenticateUser, removeCompanyVerification);
 
 router.route("/:id").get(getUserById)
 
