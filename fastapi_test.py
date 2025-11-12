@@ -14,34 +14,34 @@ app.add_middleware(
 )
 
 class Content(BaseModel):
-    calories: float
-    protein_g: float
-    fat_g: float
-    sat_fat_g: float
-    trans_fat_g: float
-    carbs_g: float
-    fiber_g: float
-    sugar_g: float
-    sodium_mg: float
-    potassium_mg: float
-    calcium_mg: float
-    has_processed_meat: float
-    has_red_meat: float
-    has_trans_fats: float
-    has_artificial_colors: float
-    has_preservatives: float
-    preservative_count: float
-    is_male_flag: float
-    carcinogen_flag: float
-    habitat_region: float
-    age_group: float
-    near_equator: float
-    urbanicity: float
-    bp_flag: float
-    pregnancy_flag: float
-    diabetes_flag: float
-    cardiac_flag: float
-    bmi_class: float
+    calories: float=0.0
+    protein_g: float=0.0
+    fat_g: float=0.0
+    sat_fat_g: float=0.0
+    trans_fat_g: float=0.0
+    carbs_g: float=0.0
+    fiber_g: float=0.0
+    sugar_g: float=0.0
+    sodium_mg: float=0.0
+    potassium_mg: float=0.0
+    calcium_mg: float=0.0
+    has_processed_meat: float=0.0
+    has_red_meat: float=0.0
+    has_trans_fats: float=0.0
+    has_artificial_colors: float=0.0
+    has_preservatives: float=0.0
+    preservative_count: float=0.0
+    is_male_flag: float=0.0
+    carcinogen_flag: float=0.0
+    habitat_region: float=0.0
+    age_group: float=0.0
+    near_equator: float=0.0
+    urbanicity: float=0.0
+    bp_flag: float=0.0
+    pregnancy_flag: float=0.0
+    diabetes_flag: float=0.0
+    cardiac_flag: float=0.0
+    bmi_class: float=0.0
 
 @app.post("/predict")
 def predict(request: Content):
