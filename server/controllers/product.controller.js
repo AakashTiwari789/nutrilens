@@ -25,7 +25,11 @@ export const getProductById = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllProducts = asyncHandler(async (req, res, next) => {
-    const products = await Product.find({ isApproved: true })
+    // Only get approved products that are not denied
+    const products = await Product.find({ 
+        isApproved: true,
+        isDenied: { $ne: true } // Explicitly exclude denied products
+    })
         .populate('companyId', 'fullName username email')
         .sort({ createdAt: -1 });
 
@@ -156,7 +160,7 @@ export const handleProductApproval = asyncHandler(async (req, res, next) => {
         throw new ApiError(403, "Only admins can handle product approvals");
     }
 
-    const { productId, action } = req.body; // action: "approve" or "deny"
+    const { productId, action, denialReason } = req.body; // action: "approve" or "deny"
 
     if (!productId || !action) {
         throw new ApiError(400, "Product ID and action are required");
@@ -179,6 +183,8 @@ export const handleProductApproval = asyncHandler(async (req, res, next) => {
     if (action === "approve") {
         product.isApproved = true;
         product.approvalRequested = false;
+        product.isDenied = false;
+        product.denialReason = undefined;
         await product.save();
 
         // Add product to company's products array
@@ -196,18 +202,19 @@ export const handleProductApproval = asyncHandler(async (req, res, next) => {
             )
         );
     } else {
-        // Deny - delete the product
-        const oldImageFileId = await getFileIdFromUrl(product.productImage);
-        if (oldImageFileId) {
-            await deleteFromImageKit(oldImageFileId);
-        }
-        await Product.findByIdAndDelete(productId);
+        // Deny - mark as denied instead of deleting
+        product.isApproved = false;
+        product.approvalRequested = false;
+        product.isDenied = true;
+        product.denialReason = denialReason || "Product did not meet approval criteria";
+        product.denialNotificationViewed = false; // Company hasn't seen the denial yet
+        await product.save();
 
         return res.status(200).json(
             new ApiResponse(
                 200,
-                {},
-                "Product approval denied and product removed"
+                { product },
+                "Product approval denied"
             )
         );
     }
@@ -484,4 +491,36 @@ export const getProductRatingByMLModel = asyncHandler(async (req, res, next) => 
         console.error("Error fetching rating from ML model:", error);
         return next(new ApiError(500, "Failed to fetch product rating from ML model"));
     }
+});
+
+// Mark denial notification as viewed (Company only)
+export const markDenialNotificationViewed = asyncHandler(async (req, res, next) => {
+    const { productId } = req.body;
+    const userId = req.user._id;
+
+    if (!productId) {
+        throw new ApiError(400, "Product ID is required");
+    }
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+        throw new ApiError(404, "Product not found");
+    }
+
+    // Verify the product belongs to the company
+    if (product.companyId.toString() !== userId.toString()) {
+        throw new ApiError(403, "You are not authorized to view this product's notification");
+    }
+
+    product.denialNotificationViewed = true;
+    await product.save();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { product },
+            "Denial notification marked as viewed"
+        )
+    );
 });

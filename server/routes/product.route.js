@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAllProducts, getProductById, registerProduct, updateProductDetails, updateProductImage, deleteProduct, getPendingProductApprovals, handleProductApproval, getApprovedProducts, removeProductApproval,getProductRatingByMLModel } from "../controllers/product.controller.js";
+import { getAllProducts, getProductById, registerProduct, updateProductDetails, updateProductImage, deleteProduct, getPendingProductApprovals, handleProductApproval, getApprovedProducts, removeProductApproval,getProductRatingByMLModel, markDenialNotificationViewed } from "../controllers/product.controller.js";
 import { authenticateUser } from "../middlewares/user.auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
 
@@ -34,6 +34,7 @@ router.route("/approved-products").get(authenticateUser, getApprovedProducts);
 router.route("/remove-approval").post(authenticateUser, removeProductApproval);
 
 router.get("/get-products", getAllProducts);
+router.post("/mark-denial-viewed", authenticateUser, markDenialNotificationViewed);
 
 router.route("/:productId").get(getProductById);
 export default router;

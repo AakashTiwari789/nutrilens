@@ -15,6 +15,9 @@ export default function CompanyProductsPage() {
   const [success, setSuccess] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [denialNotifications, setDenialNotifications] = useState([]);
+  const [showDenialModal, setShowDenialModal] = useState(false);
+  const [currentDenialIndex, setCurrentDenialIndex] = useState(0);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -71,7 +74,20 @@ export default function CompanyProductsPage() {
       });
       const data = await resp.json();
       if (resp.ok && data?.success) {
-        setProducts(data?.data?.products || []);
+        const allProducts = data?.data?.products || [];
+        setProducts(allProducts);
+        
+        // Find products with unviewed denial notifications
+        const unviewedDenials = allProducts.filter(
+          p => p.isDenied && !p.denialNotificationViewed
+        );
+        setDenialNotifications(unviewedDenials);
+        
+        // Show denial modal if there are unviewed denials
+        if (unviewedDenials.length > 0) {
+          setShowDenialModal(true);
+          setCurrentDenialIndex(0);
+        }
       } else {
         setError(data?.message || "Failed to load products");
       }
@@ -80,6 +96,60 @@ export default function CompanyProductsPage() {
     } finally {
       setLoadingProducts(false);
     }
+  };
+
+  const markDenialAsViewed = async (productId) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const resp = await fetch(`${apiUrl}/product/mark-denial-viewed`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productId }),
+      });
+      
+      if (resp.ok) {
+        // Update local state
+        setProducts(prev => prev.map(p => 
+          p._id === productId 
+            ? { ...p, denialNotificationViewed: true }
+            : p
+        ));
+        
+        // Remove from notifications
+        setDenialNotifications(prev => prev.filter(p => p._id !== productId));
+      }
+    } catch (err) {
+      console.error("Failed to mark denial as viewed");
+    }
+  };
+
+  const handleDenialModalNext = () => {
+    const currentProduct = denialNotifications[currentDenialIndex];
+    if (currentProduct) {
+      markDenialAsViewed(currentProduct._id);
+    }
+    
+    if (currentDenialIndex < denialNotifications.length - 1) {
+      setCurrentDenialIndex(currentDenialIndex + 1);
+    } else {
+      setShowDenialModal(false);
+    }
+  };
+
+  const handleDenialModalClose = () => {
+    const currentProduct = denialNotifications[currentDenialIndex];
+    if (currentProduct) {
+      markDenialAsViewed(currentProduct._id);
+    }
+    setShowDenialModal(false);
+  };
+
+  const getProductStatus = (product) => {
+    if (product.isApproved) return { text: "Approved", color: "bg-green-500/20 text-green-400" };
+    if (product.isDenied) return { text: "Denied", color: "bg-red-500/20 text-red-400" };
+    if (product.approvalRequested) return { text: "Pending", color: "bg-yellow-500/20 text-yellow-400" };
+    return { text: "Draft", color: "bg-gray-500/20 text-gray-400" };
   };
 
   const handleInputChange = (e) => {
@@ -289,47 +359,51 @@ export default function CompanyProductsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => (
-              <div key={product._id} className={`${cardBg} rounded-lg shadow p-6`}>
-                <div className="flex items-start gap-4 mb-4">
-                  <img
-                    src={product.productImage || "/images/nutrilens_logo.png"}
-                    alt={product.name}
-                    className="w-20 h-20 object-cover rounded-md border"
-                  />
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{product.name}</h3>
-                    <div className="text-sm text-gray-400">ID: {product.productId}</div>
-                    <div className="text-sm text-gray-400 capitalize">{product.category}</div>
-                    <div className="text-lg font-bold mt-2">₹{product.price}</div>
+            {products.map((product) => {
+              const status = getProductStatus(product);
+              return (
+                <div key={product._id} className={`${cardBg} rounded-lg shadow p-6`}>
+                  <div className="flex items-start gap-4 mb-4">
+                    <img
+                      src={product.productImage || "/images/nutrilens_logo.png"}
+                      alt={product.name}
+                      className="w-20 h-20 object-cover rounded-md border"
+                    />
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-1">{product.name}</h3>
+                      <div className="text-sm text-gray-400">ID: {product.productId}</div>
+                      <div className="text-sm text-gray-400 capitalize">{product.category}</div>
+                      <div className="text-lg font-bold mt-2">₹{product.price}</div>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <div className="text-sm text-gray-400 mb-1">Status</div>
+                    <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${status.color}`}>
+                      {status.text}
+                    </div>
+                    {product.isDenied && !product.denialNotificationViewed && (
+                      <div className="mt-2 text-xs text-red-500">⚠ New denial notification</div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {!product.isDenied && (
+                      <button
+                        onClick={() => router.push(`/company/products/edit/${product.productId}`)}
+                        className={`flex-1 px-3 py-2 text-white rounded-md text-sm ${buttonPrimary}`}
+                      >
+                        Edit
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleDelete(product.productId)}
+                      className={`flex-1 px-3 py-2 text-white rounded-md text-sm ${buttonDanger}`}
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
-                <div className="mb-4">
-                  <div className="text-sm text-gray-400 mb-1">Status</div>
-                  <div className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                    product.isApproved
-                      ? "bg-green-500/20 text-green-400"
-                      : "bg-yellow-500/20 text-yellow-400"
-                  }`}>
-                    {product.isApproved ? "Approved" : "Pending"}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => router.push(`/company/products/edit/${product.productId}`)}
-                    className={`flex-1 px-3 py-2 text-white rounded-md text-sm ${buttonPrimary}`}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.productId)}
-                    className={`flex-1 px-3 py-2 text-white rounded-md text-sm ${buttonDanger}`}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -506,6 +580,45 @@ export default function CompanyProductsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Denial Notification Modal */}
+        {showDenialModal && denialNotifications.length > 0 && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className={`${cardBg} rounded-lg shadow-xl max-w-md w-full`}>
+              <div className={`border-b ${borderColor} px-6 py-4`}>
+                <h2 className="text-xl font-bold text-red-500">Product Denied</h2>
+              </div>
+              <div className="p-6">
+                <p className="mb-4">
+                  Your product <strong>"{denialNotifications[currentDenialIndex]?.name}"</strong> (ID: {denialNotifications[currentDenialIndex]?.productId}) has been denied approval.
+                </p>
+                {denialNotifications[currentDenialIndex]?.denialReason && (
+                  <div className={`mb-4 p-3 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800`}>
+                    <p className="text-sm font-semibold mb-1">Reason:</p>
+                    <p className="text-sm">{denialNotifications[currentDenialIndex].denialReason}</p>
+                  </div>
+                )}
+                <p className="text-sm text-gray-500 mb-4">
+                  {currentDenialIndex + 1} of {denialNotifications.length} denial notification{denialNotifications.length > 1 ? 's' : ''}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDenialModalNext}
+                    className={`flex-1 px-4 py-2 text-white rounded-md ${buttonPrimary}`}
+                  >
+                    {currentDenialIndex < denialNotifications.length - 1 ? "Next" : "Close"}
+                  </button>
+                  <button
+                    onClick={handleDenialModalClose}
+                    className={`px-4 py-2 rounded-md border ${borderColor}`}
+                  >
+                    Dismiss All
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
